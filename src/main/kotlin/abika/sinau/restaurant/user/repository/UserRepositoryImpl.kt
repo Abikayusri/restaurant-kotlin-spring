@@ -1,42 +1,50 @@
 package abika.sinau.restaurant.user.repository
 
+import abika.sinau.restaurant.database.DatabaseComponent
 import abika.sinau.restaurant.user.entity.User
+import com.mongodb.client.MongoCollection
+import org.litote.kmongo.eq
+import org.litote.kmongo.findOne
+import org.litote.kmongo.getCollection
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
 @Repository
 class UserRepositoryImpl : UserRepository {
-    private val userList: MutableList<User> = mutableListOf()
 
-    init {
-        userList.addAll(listOf(
-                User(name = "Purwo", address = "Jl. Keputihan", city = "Bekasi", province = "Jawa Barat", nation = "Indonesia", religion = "Islam", gender = "Pria", age = 23),
-                User(name = "Mario", address = "Jl. Keputihan", city = "Bekasi", province = "Jawa Barat", nation = "Indonesia", religion = "Islam", gender = "Pria", age = 23),
-                User(name = "Agnes", address = "Jl. Keputihan", city = "Bekasi", province = "Jawa Timur", nation = "Amerika", religion = "Kristen", gender = "Wanita", age = 30),
-        ))
-    }
+    @Autowired
+    private lateinit var databaseComponent: DatabaseComponent
+
+    private fun userCollection(): MongoCollection<User> = databaseComponent.database.getDatabase("user").getCollection()
 
     override fun getUsers(): List<User> {
-        return userList
-    }
-
-    override fun getUserByName(name: String): User? {
-        return userList.find { it.name == name }
+        return userCollection().find().toList()
     }
 
     override fun addUser(name: String, address: String, city: String, province: String, nation: String, religion: String, gender: String, age: Int): List<User> {
-        userList.add(User(name = name, address = address, city = city, province = province, nation = nation, religion = religion, gender = gender, age = age))
-        return userList
+        val newUser = User(name = name, address = address, city = city, province = province, nation = nation, religion = religion, gender = gender, age = age)
+        val insertUser = userCollection().insertOne(newUser)
+
+        return if (insertUser.wasAcknowledged()) {
+            getUsers()
+        } else {
+            throw IllegalStateException("Insert User Role Gagal ")
+        }
+    }
+
+    override fun getUserByName(name: String): User? {
+        return userCollection().findOne(User::name eq name)
     }
 
     override fun getUserByReligion(religion: String): User? {
-        return userList.find { it.religion == religion }
+        return userCollection().findOne(User::religion eq religion)
     }
 
     override fun getUserByAge(age: Int): User? {
-        return userList.find { it.age == age }
+        return userCollection().findOne(User::age eq age)
     }
 
     override fun getUserByCity(city: String): User? {
-        return userList.find { it.city == city }
+        return userCollection().findOne(User::city eq city)
     }
 }
