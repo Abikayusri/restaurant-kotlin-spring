@@ -16,5 +16,5 @@ jobs:
       - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: "demo-aej-abika" #Must be unique in Heroku
+          heroku_app_name: "aej-restaurant-abika" #Must be unique in Heroku
           heroku_email: "abikayusri96@gmail.com"
